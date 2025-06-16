@@ -48,10 +48,10 @@ func _on_ControllerRight_button_release(button):
 
 func _on_PointArea_area_entered(area):
 	if FocusedHotspot != null:
-		FocusedHotspot.new_material(VRscene.MaterialUnfocus)
+		FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
 	FocusedHotspot = area
-	FocusedHotspot.new_material(VRscene.MaterialFocus)
+	FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_FOCUS)
 func _on_PointArea_area_exited(area):
 	if FocusedHotspot == area:
-		FocusedHotspot.new_material(VRscene.MaterialUnfocus)
+		FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
 		FocusedHotspot = null

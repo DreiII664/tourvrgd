@@ -60,9 +60,9 @@ func MoveRaycast(mousePos:Vector2):#move o raycast de acordo com toque ou mouse
 	var area = RayCastInUse.get_collider()
 	if area != null:
 		FocusedHotspot = area
-		FocusedHotspot.new_material(VRscene.MaterialFocus)
+		FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_FOCUS)
 	elif !area and FocusedHotspot != null:
-		FocusedHotspot.new_material(VRscene.MaterialUnfocus)
+		FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
 		FocusedHotspot = null
 
 func screenDebug(text):

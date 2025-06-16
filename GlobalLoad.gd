@@ -3,11 +3,9 @@ extends Node
 #sem precisar de nenhum node, ou seja, esse script funciona sozinho
 var xr_interface:ARVRInterface
 var vr_supported:bool = false
-"""
-problemas do tamanho do arquivo:
-	mais lento pra transferência de rede em redes mais fracas
-	consome muita rede
-"""
+
+func _ready():
+	VerifyXR()
 
 func ActivateXR()->bool:#força a ativação da realidade virtual (quest)
 	if vr_supported:
@@ -27,6 +25,7 @@ func VerifyXR()->String:#verifica se é possível ativar realidade virtual
 		xr_interface.connect("session_supported", self, "_webxr_session_supported")
 		xr_interface.connect("session_started", self, "_webxr_session_started")
 		xr_interface.is_session_supported("immersive-vr")
+		vr_supported = true
 		return "Avaliable"
 	else:
 		return "Unavaliable"

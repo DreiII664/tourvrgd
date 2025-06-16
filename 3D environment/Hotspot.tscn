@@ -1,7 +1,7 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://3D environment/hotspot.gd" type="Script" id=1]
-[ext_resource path="res://3D environment/materials/HotspotFocus.tres" type="Material" id=2]
+[ext_resource path="res://3D environment/materials/InfospotUnFocus.tres" type="Material" id=2]
 
 [sub_resource type="SphereShape" id=4]
 radius = 0.5
@@ -9,6 +9,112 @@ radius = 0.5
 [sub_resource type="SphereMesh" id=9]
 radius = 0.5
 height = 1.0
+
+[sub_resource type="DynamicFontData" id=10]
+font_path = "res://Resource/Roboto-MediumItalic.ttf"
+
+[sub_resource type="DynamicFont" id=11]
+size = 26
+outline_size = 1
+font_data = SubResource( 10 )
+
+[sub_resource type="Gradient" id=12]
+colors = PoolColorArray( 0, 0, 0, 0.654902, 0, 0.368627, 0.00392157, 0.501961 )
+
+[sub_resource type="GradientTexture2D" id=13]
+gradient = SubResource( 12 )
+width = 349
+height = 145
+fill_from = Vector2( 0.25, 0.5 )
+fill_to = Vector2( 0.4, 1 )
+
+[sub_resource type="DynamicFontData" id=14]
+antialiased = false
+font_path = "res://Resource/Roboto-MediumItalic.ttf"
+
+[sub_resource type="DynamicFont" id=15]
+size = 28
+font_data = SubResource( 14 )
+
+[sub_resource type="Animation" id=16]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ SubResource( 13 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:texture:gradient")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ SubResource( 12 ) ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath(".:texture:fill_from")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0.25, 0.5 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath(".:texture:fill_to")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0.4, 1 ) ]
+}
+
+[sub_resource type="Animation" id=17]
+resource_name = "movetex"
+length = 8.0
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:texture:fill_from")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 3, 6 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0.25, 0.5 ), Vector2( 0.75, 0.5 ), Vector2( 0.25, 0.5 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath(".:texture:fill_to")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 2, 4, 6, 8 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0.4, 1 ), Vector2( 0.5, 0.9 ), Vector2( 0.6, 1 ), Vector2( 0.5, 0.9 ), Vector2( 0.4, 1 ) ]
+}
 
 [node name="Hotspot" type="Area"]
 collision_mask = 0
@@ -27,7 +133,22 @@ skeleton = NodePath("")
 
 [node name="Label3D" type="Label3D" parent="MeshInstance"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.831288 )
-pixel_size = 0.015
 text = "Hotspot"
+font = SubResource( 11 )
 autowrap = true
-width = 200.0
+width = 300.0
+
+[node name="Description" type="Sprite3D" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.45256 )
+texture = SubResource( 13 )
+
+[node name="Label3D" type="Label3D" parent="Description"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.00734472 )
+pixel_size = 0.004
+font = SubResource( 15 )
+autowrap = true
+width = 330.0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Description"]
+anims/RESET = SubResource( 16 )
+anims/movetex = SubResource( 17 )

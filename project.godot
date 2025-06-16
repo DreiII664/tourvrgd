@@ -85,6 +85,10 @@ Trigger={
  ]
 }
 
+[mono]
+
+project/assembly_name="Tour"
+
 [physics]
 
 common/enable_pause_aware_picking=true
