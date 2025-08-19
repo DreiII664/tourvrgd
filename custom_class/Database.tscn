@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+class_name Database
+
+var loader:ResourceInteractiveLoader
+
+var Hotspots = {
+	0 : [[0, 0, 0], \"patio_interno\"]
+}
+var payload = {
+	\"fields\": {}
+}
+func _ready():
+	pass
+
+# caminho da foto && dicionario de hotspots && método PATCH/POST && nome do documento do ambiente
+
+func _on_Store_request_completed(_result, response_code, _headers, _body:PoolByteArray):
+	print(response_code)
+"
+
+[node name="Database" type="Node"]
+script = SubResource( 1 )
+
+[node name="Store" type="HTTPRequest" parent="."]
+
+[connection signal="request_completed" from="Store" to="." method="_on_Store_request_completed"]
