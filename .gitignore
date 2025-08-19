@@ -3,3 +3,5 @@ custom_class/Supa.gd
 bin/*
 
 .import/*
+
+.mono/*

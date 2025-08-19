@@ -6,8 +6,6 @@ signal received_request(obj, body_req)
 var identification = -1
 var stored_information
 var mutex:Mutex = Mutex.new()
-var thread:Thread
-signal finished_texture_threadload()
 func _ready():
 	connect("request_completed", self, "_on_request_completed")
 
@@ -35,16 +33,11 @@ func get_panorama_from_buffer(buffer:PoolByteArray) -> ImageTexture:
 	stored_information["texture"] = tex
 	emit_signal("ImageLoaded", tex, stored_information)
 	mutex.unlock()
+	#clean
+	image = null
+	e = null
+	#
 	return tex
 
 func _on_request_completed(result, response_code, headers, body:PoolByteArray):
 	emit_signal("received_request", self, body)
-#	var tex:ImageTexture
-#	if response_code:
-#		thread = Thread.new()
-#		thread.start(self, "get_panorama_from_buffer", body)
-#		yield(self, "finished_texture_threadload")
-#	tex = adj_image
-#	stored_information["texture"] = tex
-#	emit_signal("ImageLoaded", tex, stored_information)
-#	call_deferred("queue_free")
