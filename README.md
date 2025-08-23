@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [Acesso ao tour](https://drei664.itch.io/tourvr-unipampa)
 # Mudanças no commit 'thread fix'
 - correção de erro de vazamento de dados durante a troca de carregamentos na thread secundária.
@@ -8,3 +9,8 @@ correção de bugs:
 - mudança rápida de um ambiente para outro causava crash, agora não mais.
 - correção temporária de erro com threads
 - eliminado o problema de o navegador travar ao carregar foto. (usando simulação de 1 thread para carregar fotos no webgl)
+=======
+# Mudanças na versão 1.0
+- Modificação no esquema de fotos para usar threads simuladas e SharedArrayBuffer para carregamento assíncrono das fotos.
+- Correção de bugs.
+>>>>>>> 04fc465a026da843839c12e48437a7dfb762d6d4
