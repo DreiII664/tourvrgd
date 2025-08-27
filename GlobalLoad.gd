@@ -7,17 +7,12 @@ var params = {
 	0: false, # parametro usado para decitir se entrará em realidade virtual
 	1: false # parametro usado para decidir se está no mobile ou pc
 }
-func _ready():
-	VerifyXR()
 
 func ActivateXR()->bool:#força a ativação da realidade virtual (quest)
 	if vr_supported:
-		xr_interface.session_mode = 'immersive-vr'
-		xr_interface.requested_reference_space_types = 'bounded-floor, local-floor, local'
-		xr_interface.required_features = 'local-floor'
-		xr_interface.optional_features = 'bounded-floor'
 		if xr_interface.initialize():
 			SetParams({0:true})
+			get_viewport().arvr = true
 			return true
 		else:
 			SetParams({0:false})
@@ -25,11 +20,8 @@ func ActivateXR()->bool:#força a ativação da realidade virtual (quest)
 	else: return false
 
 func VerifyXR()->bool:#verifica se é possível ativar realidade virtual
-	xr_interface = ARVRServer.find_interface("WebXR")
+	xr_interface = ARVRServer.find_interface("OpenXR")
 	if xr_interface:
-		xr_interface.connect("session_supported", self, "_webxr_session_supported")
-		xr_interface.connect("session_started", self, "_webxr_session_started")
-		xr_interface.is_session_supported("immersive-vr")
 		vr_supported = true
 		return true
 	else:

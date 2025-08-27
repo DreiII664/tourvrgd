@@ -1,19 +1,9 @@
-<<<<<<< HEAD
 .import/*
 
 .mono/*
 
 custom_class/Supa.gd
 
-bin/Fotos Unipampa
-
-bin_backup/*
-
-comandos do git.txt
-=======
-custom_class/Supa.gd
-
 bin/*
 
-.import/*
->>>>>>> 04fc465a026da843839c12e48437a7dfb762d6d4
+bin_backup/*

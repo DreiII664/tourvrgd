@@ -9,6 +9,19 @@ var GyroPath = "res://main/gyro_component/gyro_component.tscn"
 onready var Gyroscope:GyroComponent
 var neweuler = Vector3.ZERO
 var touch_screen = ["Android", "iPhone", "iPad", "iPod"]
+var vr_allowed_platform = [
+	"Windows",
+	"Quest", 
+	"Oculus",
+	"Macintosh",
+	"Linux"
+]
+var vr_prohibited_platform = [
+	"iPhone", 
+	"iPad", 
+	"iPod", 
+	"Android"
+]
 var platform:String
 func _ready():
 	VRscene = get_parent()
@@ -18,10 +31,11 @@ func _ready():
 	platform = TestMobile()
 	if platform == "unknown" or platform == null:
 		$CanvasLayer/usegyro.visible = false
-	if GlobalL.vr_supported == false:
-		$CanvasLayer/immersive.visible = false
+	
+	var prohibited_vr = false
+	
 #reinicia os parametros do agent usados por outros objetos
-func ResetStats():
+func lock():
 	RayCastInUse.cast_to = Vector3(0,0,0)
 	FocusedHotspot = null
 	RayCastInUse = null
@@ -76,11 +90,13 @@ func ShowError(error):
 
 func screenDebug(text):
 	$CanvasLayer/text/Label.text = str(text)
+	$CanvasLayer/text.visible = true
 func screenDebugMultiple(args:Array):
 	var text := ""
 	for i in args:
 		text += str(i) + "\n"
 	$CanvasLayer/text/Label.text = text
+	$CanvasLayer/text.visible = true
 
 func TestMobile() -> String:
 	return JavaScript.eval("""

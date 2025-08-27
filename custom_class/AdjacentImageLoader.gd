@@ -29,7 +29,9 @@ func get_panorama_from_buffer(buffer:PoolByteArray) -> ImageTexture:
 	var tex := ImageTexture.new()
 	if e != OK:
 		return tex
-	tex.create_from_image(image, Texture.FLAG_REPEAT | ImageTexture.FLAG_FILTER)
+	tex.create_from_image(image, 
+		Texture.FLAG_REPEAT | ImageTexture.FLAG_FILTER)
+	tex.set_flags(tex.get_flags() & Texture.FLAG_MIPMAPS)
 	adj_image = tex
 	stored_information["texture"] = tex
 	

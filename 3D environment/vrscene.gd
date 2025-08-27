@@ -28,7 +28,7 @@ func AddAsyncInformation(
 		Infospots:Dictionary, 
 		Identification:int, 
 		step:int = 2
-	):
+	)->void:
 	var arr_index = AsyncIds.find(Identification)
 	if arr_index == -1:
 		AsyncImages.append(ImageTex)
@@ -41,7 +41,7 @@ func AddAsyncInformation(
 	else:
 		Step2Deletion[arr_index] = 4
 
-func ReduceSteps():
+func ReduceSteps() -> void:
 	var offset:int = 0
 	for i in range(Step2Deletion.size()):
 		Step2Deletion[i-offset]-=1
@@ -59,29 +59,43 @@ func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
 #	MaterialFocus = ResourceLoader.load("res://3D environment/materials/HotspotFocus.tres")
 #	MaterialUnfocus = ResourceLoader.load("res://3D environment/materials/HotspotUnFocus.tres")
 	print(OS.get_user_data_dir())
-	ChangeLocation(0, true)
 	AddAgent()
+	yield(get_tree().create_timer(3), "timeout")
+	ChangeLocation(0, true)
 	get_viewport().connect("size_changed", self, "UpdateScreen")
 	UpdateScreen()
 
-func UpdateScreen():
+func UpdateScreen() -> void:
 	var window_size = get_viewport().size
 
 #função chamada no _ready e pelos hotspots para trocar de ambiente
 #essa função apenas muda a variável targeted_location, se o número do ambiente
 #estiver registrado localmente, a função LoadEnvironment é chamada
-func ChangeLocation(id:int, forceload:bool = false):#carrega as informações do hotspot
+func ChangeLocation(id:int, forceload:bool = false) -> void:#carrega as informações do hotspot
 	targeted_location = id
-	if forceload:
-		$Supa.RequestCurrentEnvironment(id, true)
-	elif AsyncIds.find(id) != -1:
-		var index = AsyncIds.find(id)
-		var Tex = AsyncImages[index]
-		var DictionaryButtons = AsyncHotspots[index]
-		var DictionaryInfospots = AsyncInfospots[index]
-		LoadEnvironment(Tex, DictionaryButtons, DictionaryInfospots, id)
+	$LocalDB.carregar_dados(id)
+func _on_LocalDB_dados_carregados(data, identification):
+	LoadEnvironment(
+		data["textura"],
+		data["adjacentes"],
+		{},
+		identification
+	)
+#	if forceload:
+#		$Supa.RequestCurrentEnvironment(id, true)
+#	elif AsyncIds.find(id) != -1:
+#		var index = AsyncIds.find(id)
+#		var Tex = AsyncImages[index]
+#		var DictionaryButtons = AsyncHotspots[index]
+#		var DictionaryInfospots = AsyncInfospots[index]
+#		LoadEnvironment(Tex, DictionaryButtons, DictionaryInfospots, id)
+
+func VectorFromArray3(list:Array)->Vector3:
+	var v:Vector3 = Vector3(list[0], list[1], list[2])
+	return v
 
 func _on_Supa_current_env_loaded(information, forceload_image):
+	
 	LoadEnvironment(information["texture"], information["Hotspots"], information["Infospots"], information["id"])
 
 #função pra carregar o ambiente atual e carregar os adjacentes de forma
@@ -89,7 +103,7 @@ func _on_Supa_current_env_loaded(information, forceload_image):
 func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dictionary, id:int):
 #	print("carregado id: %d" % id, Infospots)
 	if has_node("Agent"):
-		get_node("Agent").ResetStats()
+		get_node("Agent").lock()
 	for i in $Hotspots.get_child_count():
 		$Hotspots.get_child(i).queue_free()
 	
@@ -100,29 +114,28 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 	Panorama.panorama = texture
 	$WorldEnvironment.environment.background_sky = Panorama
 	var Hotspots_info = NewButtons
-	var new_adjacents:Array = []
+#	var new_adjacents:Array = []
 	for i in Hotspots_info:
 		var HTPscn:PackedScene = ResourceLoader.load("res://3D environment/Hotspot.tscn")
 		var hot:hotspot = HTPscn.instance()
 		var index = Hotspots_info[i]
 		var TableId:int = str2var(i)
-		
 		$Hotspots.add_child(hot)
 		hot.set_hotspot(
-			$Supa.VectorFromArray3(index[0]),
-			index[1],
+			VectorFromArray3(index[1]),
+			index[0],
 			TableId,
 			self,
 			false
 		)
 		
-		var id_index = AsyncIds.find(TableId)
-		
-		if TableId != current_location:
-			if id_index == -1:
-				new_adjacents.append(TableId)
-			elif Step2Deletion[id_index] <= 1:
-				Step2Deletion[id_index] = 2
+#		var id_index = AsyncIds.find(TableId)
+#
+#		if TableId != current_location:
+#			if id_index == -1:
+#				new_adjacents.append(TableId)
+#			elif Step2Deletion[id_index] <= 1:
+#				Step2Deletion[id_index] = 2
 	
 	for i in Infospots:
 		var HTPscn:PackedScene = ResourceLoader.load("res://3D environment/Hotspot.tscn")
@@ -132,8 +145,8 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 		$Hotspots.add_child(hot)
 		
 		hot.set_hotspot(
-			$Supa.VectorFromArray3(index[0]),
-			index[1],
+			VectorFromArray3(index[0]),
+			"",
 			str2var(i),
 			self,
 			true
@@ -142,11 +155,14 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 	
 	current_location = id
 	targeted_location = -1
-	if new_adjacents.size() > 0: 
-		$Supa.GetEnvironmentRows(new_adjacents)
-	if get_node("Agent").has_method("SetRaycastAgain"):
-		get_node("Agent").SetRaycastAgain(raycast)
-	ReduceSteps()
+#	if new_adjacents.size() > 0: 
+#		$Supa.GetEnvironmentRows(new_adjacents)
+	if has_node("Agent"):
+		if get_node("Agent").has_method("SetRaycastAgain"):
+			get_node("Agent").SetRaycastAgain(raycast)
+		else:
+			get_node("Agent").unlock()
+#	ReduceSteps()
 
 func generate_ray() -> RayCast:
 	var r = RayCast.new()
@@ -162,7 +178,8 @@ func _on_Timer_timeout():
 		$Hotspots.global_position = coords
 
 func AddAgent():
-	var useVR: bool = GlobalL.GetParam(0)
+	GlobalL.VerifyXR()
+	var useVR: bool = GlobalL.ActivateXR()
 	if useVR:
 		var packed_vr: PackedScene = load("res://Agents/XRAgent.scn")
 		var agent_vr = packed_vr.instance()
@@ -175,7 +192,6 @@ func AddAgent():
 		agent_flat.RayCastInUse = raycast
 		raycast.enabled = true
 		add_child(agent_flat)
-		$Supa.connect("error_on_loading_buffer", agent_flat, "ShowError")
 
 #adiciona localmente o ambiente adjacente que foi carregado,
 #caso o targeted_location for diferente de -1, a função LoadEnvironment é chamada
