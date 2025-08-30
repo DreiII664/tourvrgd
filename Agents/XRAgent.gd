@@ -6,6 +6,9 @@ var materialnovo:SpatialMaterial
 var FocusedHotspot:hotspot
 var ControllerSelected:int = -1# left 0 / right 1
 
+signal fadein_finished()
+signal fadeout_finished()
+
 var not_locked:bool = true
 onready var VRscene = get_parent()
 onready var ControlLeft:ARVRController = $ControllerLeft
@@ -84,3 +87,14 @@ func _on_PointArea_area_exited_right(area):
 	if FocusedHotspot == area:
 		FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
 		FocusedHotspot = null
+
+func play_fade_in():
+	$CanvasLayer/AnimationPlayer.play("fade in")
+func play_fade_out():
+	$CanvasLayer/AnimationPlayer.play("fade out")
+
+func _on_AnimationPlayer_animation_finished(anim_name):
+	if anim_name == "fade in":
+		emit_signal("fadein_finished")
+	elif anim_name == "fade out":
+		emit_signal("fadeout_finished")

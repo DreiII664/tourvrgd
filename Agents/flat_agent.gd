@@ -2,12 +2,15 @@ extends Spatial
 class_name flat_agent
 var RayCastInUse:RayCast
 var FocusedHotspot:hotspot
+var close_button
 var VRscene
 var detect_inputs
 onready var GlobalL = get_node("/root/GlobalLoad")
 var GyroPath = "res://main/gyro_component/gyro_component.tscn"
 onready var Gyroscope:GyroComponent
 var neweuler = Vector3.ZERO
+signal fadein_finished()
+signal fadeout_finished()
 var touch_screen = ["Android", "iPhone", "iPad", "iPod"]
 var vr_allowed_platform = [
 	"Windows",
@@ -28,9 +31,9 @@ func _ready():
 	get_viewport().connect("size_changed", self, "WindowSizeChanged")
 	WindowSizeChanged()
 	set_process(false)
-	platform = TestMobile()
-	if platform == "unknown" or platform == null:
-		$CanvasLayer/usegyro.visible = false
+#	platform = TestMobile()
+#	if platform == "unknown" or platform == null:
+#		$CanvasLayer/usegyro.visible = false
 	
 	var prohibited_vr = false
 	
@@ -44,6 +47,8 @@ func SetRaycastAgain(ray:RayCast): RayCastInUse = ray
 
 func WindowSizeChanged():#função que recebe sinal de quando a tela mudad de tamanho
 	var _viewport_size:Vector2 = get_viewport().size #tamanho da tela em um vetor2
+	$CanvasLayer/blackScreen.margin_right = _viewport_size.x
+	$CanvasLayer/blackScreen.margin_bottom = _viewport_size.y
 
 func _input(event):#detecta as entradas (teclado, mouse ou qualquer outra coisa)
 	if event is InputEventScreenTouch:
@@ -51,12 +56,20 @@ func _input(event):#detecta as entradas (teclado, mouse ou qualquer outra coisa)
 		MoveRaycast(mousePos)
 		if FocusedHotspot:
 			FocusedHotspot.press()
-			FocusedHotspot = null
+		if close_button != null:
+			close_button.press_close()
 	elif event is InputEventScreenDrag:
+		if FocusedHotspot != null: 
+			FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
+			FocusedHotspot = null
 		moveCamera(event, 0.5)
 	
 	if Input.is_action_just_pressed("MouseLeft") and FocusedHotspot:
 		FocusedHotspot.press()
+	
+	if Input.is_action_just_pressed("MouseLeft") and close_button:
+		if close_button != null:
+			close_button.press_close()
 	
 	if event is InputEventMouseMotion and Input.is_action_pressed("MouseLeft"):
 		moveCamera(event, 0.5)
@@ -79,11 +92,19 @@ func MoveRaycast(mousePos:Vector2):#move o raycast de acordo com toque ou mouse
 		
 		var area = RayCastInUse.get_collider()
 		if area != null:
-			FocusedHotspot = area
-			FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_FOCUS)
-		elif !area and FocusedHotspot != null:
-			FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
-			FocusedHotspot = null
+			if area is hotspot:
+				FocusedHotspot = area
+				FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_FOCUS)
+			
+			if area.has_method("press_close"):
+				close_button = area
+		elif area == null:
+			if FocusedHotspot != null:
+				FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
+				FocusedHotspot = null
+			
+			if close_button != null:
+				close_button = null
 
 func ShowError(error):
 	screenDebug("erro: "+str(error))
@@ -143,3 +164,14 @@ func _on_immersive_pressed():
 	$Camera.current = false
 	VRscene.AddAgent()
 	call_deferred("queue_free")
+
+func play_fade_in():
+	$CanvasLayer/AnimationPlayer.play("fade in")
+func play_fade_out():
+	$CanvasLayer/AnimationPlayer.play("fade out")
+
+func _on_AnimationPlayer_animation_finished(anim_name):
+	if anim_name == "fade in":
+		emit_signal("fadein_finished")
+	elif anim_name == "fade out":
+		emit_signal("fadeout_finished")

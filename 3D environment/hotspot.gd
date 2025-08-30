@@ -26,7 +26,7 @@ func set_hotspot(angle:Vector3, hotspot_name:String, id:int, vrsc, InfoSpot:bool
 	Identification = id
 	VRscene = vrsc
 	IsInfospot = InfoSpot
-	
+	$MeshInstance.global_rotation.z = 0
 	if not InfoSpot:
 		MaterialFocus = ResourceLoader.load("res://3D environment/materials/HotspotFocus.tres")
 		MaterialUnfocus = ResourceLoader.load("res://3D environment/materials/HotspotUnFocus.tres")
@@ -40,6 +40,10 @@ func press():#pressiona o hotspot
 	else: 
 		$Description.visible = true
 		$Description/AnimationPlayer.play("movetex")
+		$Description/close_description.monitorable = true
+
+func adjust_angle(reference:Spatial):
+	look_at(reference.global_position, Vector3.UP)
 
 func define_color(modulate:Color):
 	var material:SpatialMaterial = $MeshInstance.material_override
@@ -52,10 +56,13 @@ func set_state(stt:int):
 	if state == stateMachine.STATE_FOCUS:
 		$MeshInstance.material_override = MaterialFocus
 	elif state == stateMachine.STATE_UNFOCUS:
-		$Description.visible = false
-		$Description/AnimationPlayer.stop()
 		$MeshInstance.material_override = MaterialUnfocus
 
 func set_description(val:String):
 	description = val
 	$Description/Label3D.text = val
+
+func _on_close_description_close_pressed():
+	$Description.visible = false
+	$Description/AnimationPlayer.stop()
+	$Description/close_description.monitorable = false

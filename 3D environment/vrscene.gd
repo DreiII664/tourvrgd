@@ -72,14 +72,19 @@ func UpdateScreen() -> void:
 #estiver registrado localmente, a função LoadEnvironment é chamada
 func ChangeLocation(id:int) -> void:#carrega as informações do hotspot
 	targeted_location = id
+	if has_node("Agent"):
+		$Agent.call_deferred("play_fade_in")
+		yield($Agent, "fadein_finished")
 	$LocalDB.carregar_dados(id)
 func _on_LocalDB_dados_carregados(data, identification):
 	LoadEnvironment(
 		data["textura"],
 		data["adjacentes"],
-		{},
+		data["infospots"],
 		identification
 	)
+	if has_node("Agent"):
+		$Agent.call_deferred("play_fade_out")
 #	if forceload:
 #		$Supa.RequestCurrentEnvironment(id, true)
 #	elif AsyncIds.find(id) != -1:
@@ -107,6 +112,7 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 	
 	var texture:ImageTexture = EnvImage
 	var Panorama:PanoramaSky = PanoramaSky.new()
+	Panorama.radiance_size = Sky.RADIANCE_SIZE_64
 	Panorama.panorama = texture
 	$WorldEnvironment.environment.background_sky = Panorama
 	var Hotspots_info = NewButtons
@@ -124,6 +130,7 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 			self,
 			false
 		)
+#		hot.adjust_angle($Agent)
 	
 	current_location = id
 	targeted_location = -1
@@ -141,21 +148,21 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 #			elif Step2Deletion[id_index] <= 1:
 #				Step2Deletion[id_index] = 2
 	
-#	for i in Infospots:
-#		var HTPscn:PackedScene = ResourceLoader.load("res://3D environment/Hotspot.tscn")
-#		var hot:hotspot = HTPscn.instance()
-#		var index = Infospots[i]
-#
-#		$Hotspots.add_child(hot)
-#
-#		hot.set_hotspot(
-#			VectorFromArray3(index[0]),
-#			"",
-#			str2var(i),
-#			self,
-#			true
-#		)
-#		hot.set_description(index[2])
+	for i in Infospots:
+		var HTPscn:PackedScene = ResourceLoader.load("res://3D environment/Hotspot.tscn")
+		var hot:hotspot = HTPscn.instance()
+		var index = Infospots[i]#lista de infos do hotspot atual
+
+		$Hotspots.add_child(hot)
+
+		hot.set_hotspot(
+			VectorFromArray3(index[0]),
+			i,
+			-1,
+			self,
+			true
+		)
+		hot.set_description(index[1])
 
 func generate_ray() -> RayCast:
 	var r = RayCast.new()

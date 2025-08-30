@@ -33,19 +33,13 @@ func carregar_dados(id: int, recursivo: bool = false) -> String:
 	else:
 		print("Arquivo não encontrado em: ", img_path)
 	
-	textura.flags = Texture.FLAG_REPEAT & ImageTexture.FLAG_FILTER & Texture.FLAG_MIPMAPS
+	textura.flags = Texture.FLAG_REPEAT & Texture.FLAG_ANISOTROPIC_FILTER & Texture.FLAG_MIPMAPS
 	
 	# Ler adjacents.json
+	#caso ocorra um erro, a função retorna e envia um erro
 	var adj_file = File.new()
 	if adj_file.open(path + "adjacents.json", File.READ) != OK:
-		print("Erro ao abrir adjacents.json para id: %d" % id)
-		# Emitir sinal mesmo assim, com adjacentes vazio
-		var data_dict = {
-			"textura": textura,
-			"nome": nome,
-			"adjacentes": {}
-		}
-		emit_signal("dados_carregados", data_dict)
+		push_error("Erro ao abrir adjacents.json para id: %d" % id)
 		return nome
 	
 	var json_text = adj_file.get_as_text()
@@ -53,24 +47,12 @@ func carregar_dados(id: int, recursivo: bool = false) -> String:
 	
 	var json_parse = JSON.parse(json_text)
 	if json_parse.error != OK:
-		print("Erro ao parsear JSON para id: %d" % id)
-		var data_dict = {
-			"textura": textura,
-			"nome": nome,
-			"adjacentes": {}
-		}
-		emit_signal("dados_carregados", data_dict)
+		push_error("Erro ao parsear JSON para id: %d" % id)
 		return nome
 	
 	var raw_adj = json_parse.result
 	if not raw_adj is Dictionary:
-		print("JSON não é um dicionário para id: %d" % id)
-		var data_dict = {
-			"textura": textura,
-			"nome": nome,
-			"adjacentes": {}
-		}
-		emit_signal("dados_carregados", data_dict)
+		push_error("JSON não é um dicionário para id: %d" % id)
 		return nome
 	
 	var adjacentes = {}
@@ -79,10 +61,29 @@ func carregar_dados(id: int, recursivo: bool = false) -> String:
 		var adj_nome = carregar_dados(adj_id, true)
 		adjacentes[key] = [adj_nome, raw_adj[key]]
 	
+	var infos_file = File.new()
+	if infos_file.open(path + "infospots.json", File.READ) != OK:
+		push_error("Erro ao abrir infospots.json para id: %d" % id)
+		return nome
+	
+	var info_json_text = infos_file.get_as_text()
+	adj_file.close()
+	
+	var info_json_parse = JSON.parse(info_json_text)
+	if json_parse.error != OK:
+		push_error("Erro ao parsear JSON para id: %d" % id)
+		return nome
+	
+	var infospots = info_json_parse.result
+	if not infospots is Dictionary:
+		push_error("JSON não é um dicionário para id: %d" % id)
+		return nome
+	
 	var data_dict = {
 		"textura": textura,
 		"nome": nome,
-		"adjacentes": adjacentes
+		"adjacentes": adjacentes,
+		"infospots": infospots
 	}
 	emit_signal("dados_carregados", data_dict, id)
 	return nome

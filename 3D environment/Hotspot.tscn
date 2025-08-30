@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://3D environment/materials/InfospotUnFocus.tres" type="Material" id=1]
 [ext_resource path="res://3D environment/hotspot.gd" type="Script" id=2]
@@ -117,6 +117,17 @@ tracks/1/keys = {
 "values": [ Vector2( 0.4, 1 ), Vector2( 0.5, 0.9 ), Vector2( 0.6, 1 ), Vector2( 0.5, 0.9 ), Vector2( 0.4, 1 ) ]
 }
 
+[sub_resource type="GDScript" id=18]
+script/source = "extends Area
+signal close_pressed()
+
+func press_close():
+	emit_signal(\"close_pressed\")
+"
+
+[sub_resource type="BoxShape" id=19]
+extents = Vector3( 0.2, 0.2, 0.2 )
+
 [node name="Hotspot" type="Area"]
 collision_mask = 0
 monitoring = false
@@ -154,3 +165,15 @@ width = 330.0
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Description"]
 anims/RESET = SubResource( 16 )
 anims/movetex = SubResource( 17 )
+
+[node name="close_description" type="Area" parent="Description"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1.54047, 0.5215, 0 )
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = SubResource( 18 )
+
+[node name="CollisionShape" type="CollisionShape" parent="Description/close_description"]
+shape = SubResource( 19 )
+
+[connection signal="close_pressed" from="Description/close_description" to="." method="_on_close_description_close_pressed"]
