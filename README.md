@@ -1,14 +1,15 @@
-# Refatoração do banco de dados
-# Mudanças no commit 'thread fix'
-- correção de erro de vazamento de dados durante a troca de carregamentos na thread secundária.
-# Mudanças no commit 'att fotos'
-- Modificação no esquema de fotos para usar threads simuladas e SharedArrayBuffer para carregamento assíncrono das fotos.
-correção de bugs:
-- problemas com carregamento dos textos nos hotspots de informação.
-- mudança rápida de um ambiente para outro causava crash, agora não mais.
-- correção temporária de erro com threads
-- eliminado o problema de o navegador travar ao carregar foto. (usando simulação de 1 thread para carregar fotos no webgl)
-=======
-# Mudanças na versão 1.0
-- Modificação no esquema de fotos para usar threads simuladas e SharedArrayBuffer para carregamento assíncrono das fotos.
-- Correção de bugs.
+Este é o código fonte do tour virtul da UNIPAMPA feito em GDscript.
+
+# Instalação e execução do código fonte
+- clone o repositório usando o comando na pasta de sua preferência
+```
+git clone https://github.com/DreiII664/tourvrgd.git
+```
+- Instale o godot 3 na versão mais recente: https://godotengine.org/download/3.x/windows/
+- abra o godot e importe o projeto a partir do arquivo "project.godot".
+
+para compilar o código para meta quest, conecte um cabo USB ao Meta Quest e espere aparecer um ícone no canto superior direito do editor. (modo desenvolvedor deve estar habilitado no headset)
+Se estiver rodando o apk no meta quest, ou dispositivos android, dê permissão para o app acessar arquivos do aparelho para armazenar as imagens do tour.
+
+# Integração com o banco de dados
+Nesta atualização, o tour na versão godot está parcialmente integrado com o banco de dados da versão three.js do tour da unipampa, além das diversas adaptações das cenas para comportar corretamente a posição dos hotspots e rotação das imagens.

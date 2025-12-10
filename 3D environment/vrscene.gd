@@ -5,13 +5,15 @@ onready var Locations = get_node("/root/Locations")
 var LocationInfo:Dictionary
 export var current_location:int
 class_name vrscene
-
 #var MaterialFocus:SpatialMaterial
 #var MaterialUnfocus:SpatialMaterial
 var raycast:RayCast
 var flatagent
 var targeted_location:int = -1
-const MB:int = 1024*1024
+var targeted_angle:float = 0
+var alignHotspots:FuncRef
+
+var loaderThread := Thread.new()
 
 var Step2Deletion:Array = []
 
@@ -56,65 +58,135 @@ func ReduceSteps() -> void:
 
 #função semelhante ao main do C
 func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
-#	MaterialFocus = ResourceLoader.load("res://3D environment/materials/HotspotFocus.tres")
-#	MaterialUnfocus = ResourceLoader.load("res://3D environment/materials/HotspotUnFocus.tres")
-	print(OS.get_user_data_dir())
 	AddAgent()
-	ChangeLocation(0)
 	get_viewport().connect("size_changed", self, "UpdateScreen")
 	UpdateScreen()
+	if OS.has_feature("Android"):
+		if OS.get_granted_permissions().size() < 4:
+			OS.request_permissions()
+			yield(get_tree().create_timer(6), "timeout")
+	
+	print(OS.get_user_data_dir())
+	var envs := Directory.new()
+	if !envs.dir_exists(GlobalLoad.ROOT_PATH_ENVIRONMENTS):
+		$Label3D.visible = true
+		envs.make_dir(GlobalLoad.ROOT_PATH_ENVIRONMENTS)
+		var copybasescn:PackedScene = ResourceLoader.load("res://custom_class/SceneCopy.scn")
+		var copybase:Node = copybasescn.instance()
+		add_child(copybase)
+		copybase.connect("carregamento_completo", self, "alterar_texto")
+		copybase.connect("tudo_carregado", self, "sair")
+		copybase.fetch_from_jsonbd()
+	else:
+		ChangeLocation(current_location, 90)
+
+func sair():
+	get_tree().quit()
+
+func alterar_texto(cena_atual:int, cenas:int):
+	$Label3D.text = "cenas baixadas: "+str(cena_atual)+"/"+str(cenas)
 
 func UpdateScreen() -> void:
 	var window_size = get_viewport().size
 
+func _process(delta):
+	
+	if alignHotspots != null: 
+		alignHotspots.call_func()
+
 #função chamada no _ready e pelos hotspots para trocar de ambiente
 #essa função apenas muda a variável targeted_location, se o número do ambiente
 #estiver registrado localmente, a função LoadEnvironment é chamada
-func ChangeLocation(id:int) -> void:#carrega as informações do hotspot
+func ReloadLocation(angle:float):
+	ChangeLocation(current_location, angle)
+
+func ChangeLocation(id:int, agent_angle = null) -> void:
 	targeted_location = id
-	if has_node("Agent"):
-		$Agent.call_deferred("play_fade_in")
-		yield($Agent, "fadein_finished")
-	$LocalDB.carregar_dados(id)
+	if agent_angle != null: targeted_angle = agent_angle
+	#get_tree().call_group("Spots", "ShadeNodes")
+	get_node("Agent").lock()
+	$AnimationPlayer.play("fadein")
+	if !loaderThread.is_alive(): loaderThread.wait_to_finish()
+	loaderThread = Thread.new()
+	loaderThread.start($LocalDB, "carregar_dados", id)
+	#$LocalDB.carregar_dados(id, false)
+	
+	if $AnimationPlayer.is_playing():
+		yield($AnimationPlayer, "animation_finished")
+	#$LocalDB.fetch_data("cenas", 2)
 func _on_LocalDB_dados_carregados(data, identification):
-	LoadEnvironment(
+	
+	if !loaderThread.is_alive(): loaderThread.wait_to_finish()
+	
+	call_deferred(
+		"LoadEnvironment",
 		data["textura"],
 		data["adjacentes"],
 		data["infospots"],
-		identification
+		identification,
+		data["scene_properties"]
 	)
-	if has_node("Agent"):
-		$Agent.call_deferred("play_fade_out")
-#	if forceload:
-#		$Supa.RequestCurrentEnvironment(id, true)
-#	elif AsyncIds.find(id) != -1:
-#		var index = AsyncIds.find(id)
-#		var Tex = AsyncImages[index]
-#		var DictionaryButtons = AsyncHotspots[index]
-#		var DictionaryInfospots = AsyncInfospots[index]
-#		LoadEnvironment(Tex, DictionaryButtons, DictionaryInfospots, id)
+	if get_node("Agent").has_method("SetRaycastAgain"):
+		get_node("Agent").SetRaycastAgain(raycast)
+	else:
+		get_node("Agent").unlock()
+	$AnimationPlayer.play("fadeout")
+func _on_LocalDB_dados_carregados_nuvem(cena:SceneProperties):
+	call_deferred(
+		"LoadEnvironment",
+		cena.Panorama,
+		{},
+		{},
+		cena.id,
+		{"pitch": cena.entrada_pitch, "yaw":cena.entrada_yaw, "roll":cena.entrada_roll}
+	)
+	print("deu")
+	$AnimationPlayer.play("fadeout")
 
 func VectorFromArray3(list:Array)->Vector3:
 	var v:Vector3 = Vector3(list[0], list[1], list[2])
 	return v
 
-
+func VectorFromArray2(list:Array)->Vector2:
+	var v:Vector2 = Vector2(list[0], list[1])
+	return v
 
 #função pra carregar o ambiente atual e carregar os adjacentes de forma
 #assíncrona
-func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dictionary, id:int):
-	print("carregado id: %d" % id)
-	get_node("Agent").lock()
+func LoadEnvironment(
+	EnvImage:ImageTexture, 
+	NewButtons:Dictionary, 
+	Infospots:Dictionary, 
+	id:int,
+	ScnProperties:Dictionary
+	):
+	
 	for i in $Hotspots.get_child_count():
 		$Hotspots.get_child(i).queue_free()
-	
 #	AddAsyncInformation(EnvImage, "", NewButtons, Infospots, id, 4)
+	$MeshInstance.rotation_degrees = Vector3(180, 270, 0)
+	var js_rotations = Vector3(
+		0,#x
+		ScnProperties["yaw"],#y
+		0#z
+	)
+	print(js_rotations)
+	$MeshInstance.rotation_degrees += js_rotations
 	
 	var texture:ImageTexture = EnvImage
-	var Panorama:PanoramaSky = PanoramaSky.new()
-	Panorama.radiance_size = Sky.RADIANCE_SIZE_64
-	Panorama.panorama = texture
-	$WorldEnvironment.environment.background_sky = Panorama
+	var Mat := SpatialMaterial.new()
+#	Mat.albedo_color = Color(0,0,0)
+	Mat.flags_unshaded = true
+	Mat.flags_do_not_receive_shadows = true
+	Mat.params_cull_mode = Material3D.CULL_DISABLED
+	Mat.albedo_texture = texture
+	$MeshInstance.material_override = Mat
+	
+#	var Panorama:PanoramaSky = PanoramaSky.new()
+#	Panorama.radiance_size = Sky.RADIANCE_SIZE_64
+#	Panorama.panorama = texture
+#	$WorldEnvironment.environment.background_sky = Panorama
+	
 	var Hotspots_info = NewButtons
 #	var new_adjacents:Array = []
 	for i in Hotspots_info:
@@ -123,9 +195,9 @@ func LoadEnvironment(EnvImage:ImageTexture, NewButtons:Dictionary, Infospots:Dic
 		var index = Hotspots_info[i]
 		var TableId:int = str2var(i)
 		$Hotspots.add_child(hot)
-		hot.set_hotspot(
-			VectorFromArray3(index[1]),
-			index[0],
+		hot.call_deferred("set_hotspot",
+			VectorFromArray3(index[0]),
+			index[1],
 			TableId,
 			self,
 			false
@@ -177,13 +249,19 @@ func _on_Timer_timeout():
 		var coords = agent.get_node("ARVRCamera").global_position
 		$Hotspots.global_position = coords
 
+func AlignHotspots():
+	$Hotspots.global_position = $Agent/ARVRCamera.global_position
+
 func AddAgent():
-	GlobalL.VerifyXR()
-	var useVR: bool = GlobalL.ActivateXR()
+	var verify:bool = GlobalL.VerifyXR()
+	var useVR: bool = false
+	if verify:
+		useVR = GlobalL.ActivateXR()
 	if useVR:
 		var packed_vr: PackedScene = load("res://Agents/XRAgent.scn")
 		var agent_vr = packed_vr.instance()
 		add_child(agent_vr)
+		alignHotspots = funcref(self, "AlignHotspots")
 	else:
 		raycast = generate_ray()
 		add_child(raycast)

@@ -1,0 +1,113 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node
+
+# --- Configure isso com suas informações ---
+# Encontre em \"Dashboard\" no Cloudinary
+var CLOUD_NAME = \"dsg9hvvo7\"
+# O nome que você deu no Passo 1
+var UPLOAD_PRESET = \"scene_images\"
+# ---------------------------------------------
+
+# O endpoint da API para upload
+var UPLOAD_URL = \"https://api.cloudinary.com/v1_1/\" + CLOUD_NAME + \"/image/upload\"
+
+# Caminho para a imagem que você quer enviar (exemplo)
+var image_path = \"res://icon.png\"
+var cloud_link = \"https://res.cloudinary.com/dsg9hvvo7/image/upload/v1761492184/mefhvhs5mxucqi6lonw9.png\"
+
+onready var http_request = $Uploader
+
+func _ready():
+	load_from_cloud(cloud_link)
+
+func start_upload(path:String):
+	print(\"Iniciando upload para: \", path)
+	
+	# 1. Carregar a imagem do disco como bytes
+	var file = File.new()
+	var err = file.open(path, File.READ)
+	if err != OK:
+		print(\"Erro ao abrir o arquivo: \", err)
+		return
+		
+	var image_data = file.get_buffer(file.get_len())
+	file.close()
+	
+	# 2. Codificar os bytes da imagem em Base64
+	var base64_image = Marshalls.raw_to_base64(image_data)
+	
+	# 3. Criar o \"Data URI\"
+	# (Assumindo que é um PNG. Mude para 'image/jpeg' se for o caso)
+	var data_uri = \"data:image/png;base64,\" + base64_image
+	
+	# 4. Criar o corpo (body) da requisição em JSON
+	var body = {
+		\"file\": data_uri,
+		\"upload_preset\": UPLOAD_PRESET
+	}
+	var json_body = JSON.print(body)
+	
+	# 5. Configurar e enviar a requisição HTTP POST
+	var headers = [\"Content-Type: application/json\"]
+	var error = http_request.request(UPLOAD_URL, headers, true, HTTPClient.METHOD_POST, json_body)
+	
+	if error != OK:
+		print(\"Erro ao iniciar a requisição HTTP: \", error)
+
+# 4. Lidar com a resposta do Cloudinary
+func _on_request_completed(result, response_code, headers, body):
+	if result != HTTPRequest.RESULT_SUCCESS:
+		print(\"Erro na requisição: \", result)
+		return
+
+	print(\"Resposta recebida. Código: \", response_code)
+	
+	# Converte o corpo da resposta (que são bytes) para String
+	var response_string = body.get_string_from_utf8()
+	
+	# Analisa o JSON da resposta
+	var json = JSON.parse(response_string)
+	
+	if json.error != OK:
+		print(\"Erro ao analisar JSON da resposta: \", json.error_string)
+		return
+
+	var response_data = json.result
+	
+	if response_code == 200:
+		# Sucesso!
+		print(\"Upload completo!\")
+		print(\"URL Segura: \", response_data.secure_url)
+		print(\"Public ID: \", response_data.public_id)
+	else:
+		# Erro do Cloudinary
+		print(\"Erro no upload: \", response_data.error.message)
+
+func load_from_cloud(url:String):
+	var h =[]
+	$Get.request(url, h, false, HTTPClient.METHOD_GET)
+
+func _on_Get_request_completed(result, response_code, headers, body:PoolByteArray):
+	var Imagem:Image = Image.new()
+	Imagem.load_png_from_buffer(body)
+	var tex := ImageTexture.new()
+	tex.create_from_image(Imagem)
+	$Node2D/Sprite.texture = tex
+"
+
+[node name="Cloudinary" type="Node"]
+script = SubResource( 1 )
+
+[node name="Uploader" type="HTTPRequest" parent="."]
+
+[node name="Get" type="HTTPRequest" parent="."]
+
+[node name="Node2D" type="Node2D" parent="."]
+
+[node name="Sprite" type="Sprite" parent="Node2D"]
+position = Vector2( 553, 277 )
+
+[connection signal="request_completed" from="Uploader" to="." method="_on_request_completed"]
+[connection signal="request_completed" from="Get" to="." method="_on_Get_request_completed"]

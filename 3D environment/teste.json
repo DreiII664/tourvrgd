@@ -1,0 +1,110 @@
+{
+  "1": {
+    "image": "https://res.cloudinary.com/duybnz3if/image/upload/v1763945455/pampa00_okmljv.jpg",
+    "initialYaw": 87,
+    "hotspots": [
+      {
+        "name": "Estacionamento da Unipampa - Avenida Tiarajú",
+        "target": 55,
+        "position": { "x": -15, "y": 0, "z": 2 },
+        "icon": "public/bolaHots.png"
+      }
+    ]
+  },
+  "4": {
+    "image": "https://res.cloudinary.com/duybnz3if/image/upload/v1763945454/pampa01_bws4fw.jpg",
+    "initialYaw": 90,
+    "hotspots": [
+      {
+        "name": "Voltar para o começo da Unipampa.",
+        "target": 77,
+        "position": { "x": -20, "y": 0, "z": -1 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Pátio da Unipampa.",
+        "target": 5,
+        "position": { "x": 20, "y": 0, "z": 0 },
+        "icon": "public/bolaHots.png"
+      }
+    ]
+  },
+  "5": {
+    "image": "imagensTour/Pampa06.jpg",
+    "initialYaw": 90,
+    "hotspots": [
+      {
+        "name": "Retorno cena 4",
+        "target": 4,
+        "position": { "x": 30, "y": 0, "z": 5 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Entrando dentro do segundo prédio da Unipampa",
+        "target": 6,
+        "position": { "x": -14, "y": 0, "z": 9 },
+        "icon": "public/bolaHots.png"
+      }
+    ]
+  },
+  "6": {
+    "image": "imagensTour/Pampa08.jpg",
+    "initialYaw": 90,
+    "hotspots": [
+      {
+        "name": "Ir para o corredor da esquerda.",
+        "target": 9,
+        "position": { "x": -2, "y": 0, "z": 20 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Subir para o segundo andar.",
+        "target": 13,
+        "position": { "x": -20, "y": 5, "z": 15 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Voltar para o pátio.",
+        "target": 5,
+        "position": { "x": 15, "y": 0, "z": 5 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Ir para o corredor da direita.",
+        "target": 18,
+        "position": { "x": 2, "y": 0, "z": -15 },
+        "icon": "public/bolaHots.png"
+      }
+    ]
+  },
+"61": {
+    "image": "imagensTour/Pampa07.jpg",
+    "initialYaw": 90,
+    "hotspots": [
+      {
+        "name": "Passagem de pedestres - entre os prédios A1, A2 e A3",
+        "target": 62,
+        "position": { "x": 1, "y": 0, "z": -15 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Leia me",
+        "texto": "Algibe é um reservatório para coleta de água da chuva ou do lençol freático. Era muito usado no século XIX no Rio Grande do Sul, pois não existia serviço de água encanada na época. Trata-se de uma peça original, constituída por volta de 1840, feita com pedras comuns da região e estrutura metálica provavelmente importada da Europa.\nEstava originalmente localizado no pátio interno da residência situada na rua General Vitorino, 243, no centro de alegrete - RS, a qual pertenceu ao Dr. Francisco de Sá Brito advogado, que foi um dos autores da constituição da república RioGrandense e ministro da justiça do governo Farroupilha. Algibe foi realocado no jardim do Campus Alegrete da Unipampa em 16 de outubro de 2016 como forma de preservar e divulgar o patrimônio histórico e cultural da cidade.",
+        "position": { "x": -15, "y": -6, "z": 8 },
+        "icon": "public/infoIcon.png"
+      },
+      {
+        "name": "Passagem de pedestres - fundos do prédio A1",
+        "target": 60,
+        "position": { "x": -1, "y": 0, "z": 13 },
+        "icon": "public/bolaHots.png"
+      },
+      {
+        "name": "Algibe do campus Alegrete",
+        "target": 40,
+        "position": { "x": -16, "y": 0, "z": -1 },
+        "icon": "public/bolaHots.png"
+      }
+    ]
+  }
+}

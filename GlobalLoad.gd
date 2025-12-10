@@ -8,7 +8,10 @@ var params = {
 	1: false # parametro usado para decidir se está no mobile ou pc
 }
 
+var ROOT_PATH_ENVIRONMENTS:String = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS) + "/Environments/"
+
 func _ready():
+	
 	OS.request_permissions()
 
 func ActivateXR()->bool:#força a ativação da realidade virtual (quest)
