@@ -76,7 +76,10 @@ gdscript/warnings/unused_argument=false
 
 [display]
 
+window/vsync/use_vsync=false
 window/handheld/orientation="portrait"
+window/stretch/mode="viewport"
+window/stretch/aspect="expand"
 
 [editor]
 

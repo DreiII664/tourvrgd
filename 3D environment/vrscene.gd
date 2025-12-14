@@ -4,6 +4,7 @@ onready var GlobalL = get_node("/root/GlobalLoad")
 onready var Locations = get_node("/root/Locations")
 var LocationInfo:Dictionary
 export var current_location:int
+export var tamanho_tour_estimado:float = 500
 class_name vrscene
 #var MaterialFocus:SpatialMaterial
 #var MaterialUnfocus:SpatialMaterial
@@ -56,6 +57,18 @@ func ReduceSteps() -> void:
 			AsyncIds.remove(i)
 			offset+=1
 
+func GenerateScenesData(envs:Directory):
+	$Aviso.visible = true
+	envs.make_dir(GlobalLoad.ROOT_PATH_ENVIRONMENTS)
+	var copybasescn:PackedScene = ResourceLoader.load("res://custom_class/SceneCopy.scn")
+	var copybase:Node = copybasescn.instance()
+	add_child(copybase)
+	copybase.connect("carregamento_completo", self, "alterar_texto")
+	copybase.connect("tudo_carregado", self, "sair")
+	copybase.fetch_from_jsonbd()
+	if $Agent.has_method("total_lock"):
+		$Agent.total_lock()
+
 #função semelhante ao main do C
 func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
 	AddAgent()
@@ -69,22 +82,17 @@ func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
 	print(OS.get_user_data_dir())
 	var envs := Directory.new()
 	if !envs.dir_exists(GlobalLoad.ROOT_PATH_ENVIRONMENTS):
-		$Label3D.visible = true
-		envs.make_dir(GlobalLoad.ROOT_PATH_ENVIRONMENTS)
-		var copybasescn:PackedScene = ResourceLoader.load("res://custom_class/SceneCopy.scn")
-		var copybase:Node = copybasescn.instance()
-		add_child(copybase)
-		copybase.connect("carregamento_completo", self, "alterar_texto")
-		copybase.connect("tudo_carregado", self, "sair")
-		copybase.fetch_from_jsonbd()
+		GenerateScenesData(envs)
 	else:
 		ChangeLocation(current_location, 90)
 
 func sair():
 	get_tree().quit()
 
-func alterar_texto(cena_atual:int, cenas:int):
-	$Label3D.text = "cenas baixadas: "+str(cena_atual)+"/"+str(cenas)
+var totalbaixado:float = 0
+func alterar_texto(cena_atual:int, cenas:int, mb_loaded:float):
+	totalbaixado+= mb_loaded
+	$Aviso/Label3D.text = "cenas baixadas: "+str(cena_atual)+"/"+str(cenas)+"\n %.2f MB/ ~%.2f MB"%[totalbaixado, tamanho_tour_estimado]
 
 func UpdateScreen() -> void:
 	var window_size = get_viewport().size
@@ -294,3 +302,10 @@ func _on_Supa_async_env_loaded(information):
 #função de retorno de erro do supa que eu não usei ainda
 func _on_Supa_error_on_loading_buffer():
 	pass # Replace with function body.
+
+
+func _on_LocalDB_error_loading_image():
+	var dir = Directory.new()
+	dir.remove(GlobalLoad.ROOT_PATH_ENVIRONMENTS)
+	$Aviso/Label3D2.text = "houve um problema ao carregar imagens,\ntentando baixar novamente.\nNão saia do aplicativo"
+	GenerateScenesData(dir)

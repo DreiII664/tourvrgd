@@ -2,6 +2,7 @@ extends Node
 
 signal dados_carregados(data, identification)
 signal dados_carregados_nuvem(cena)
+signal error_loading_image()
 
 var CLOUD_NAME = "dsg9hvvo7"
 var UPLOAD_PRESET = "scene_images"
@@ -81,6 +82,8 @@ func carregar_dados(id: int, recursivo: bool = false) -> String:
 			print("Erro ao abrir o arquivo!")
 	else:
 		print("Arquivo não encontrado em: ", img_path)
+		emit_signal("error_loading_image")
+		return ""
 	
 	textura.flags = ImageTexture.FLAG_REPEAT & ImageTexture.FLAG_FILTER & ImageTexture.FLAG_ANISOTROPIC_FILTER & ~ImageTexture.FLAG_MIPMAPS
 	

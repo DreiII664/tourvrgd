@@ -13,7 +13,7 @@ signal fadein_finished()
 signal fadeout_finished()
 var touch_screen = ["Android", "iPhone", "iPad", "iPod"]
 var mobile_touch:bool = true
-var InputStates:Array = ["InputStateEditing", "InputStateExploring"]
+var InputStates:Array = ["InputStateEditing", "InputStateExploring", "LockedRaycast"]
 var AgentInputState:FuncRef = funcref(self, InputStates[1])
 var interpolateHotspotRot:FuncRef = null
 var EditingInstance:int = -1
@@ -38,9 +38,11 @@ func _ready():
 #	screenDebug(platform)
 	WindowSizeChanged()
 	set_process(false)
-#	platform = TestMobile()
-#	if platform == "unknown" or platform == null:
-#		$CanvasLayer/usegyro.visible = false
+	var isMobile:bool = TestMobile()
+	if !isMobile:
+		$CanvasLayer/usegyro.visible = false
+	else:
+		$CanvasLayer/usegyro.visible = true
 	var prohibited_vr = false
 
 func screen_input(event):
@@ -56,7 +58,7 @@ func screen_input(event):
 		if close_button != null:
 			close_button.press_close()
 	
-	elif event is InputEventScreenDrag:
+	elif event is InputEventScreenDrag and mobile_touch:
 		if FocusedHotspot != null: 
 			FocusedHotspot.set_state(FocusedHotspot.stateMachine.STATE_UNFOCUS)
 			FocusedHotspot = null
@@ -76,10 +78,10 @@ func InputStateExploring(event):
 			$CanvasLayer/Description.visible = true
 			$CanvasLayer/Description/ScrollContainer/Label.text = t
 	
-	if Input.is_action_just_pressed("MouseRight") and FocusedHotspot:
-		FocusedHotspot._state_2()
-		$CanvasLayer/EditHotspotDialog.show()
-		SetStateEditing(true)
+#	if Input.is_action_just_pressed("MouseRight") and FocusedHotspot:
+#		FocusedHotspot._state_2()
+#		$CanvasLayer/EditHotspotDialog.show()
+#		SetStateEditing(true)
 	
 	if Input.is_action_just_pressed("MouseLeft") and close_button:
 		if close_button != null:
@@ -92,25 +94,33 @@ func InputStateExploring(event):
 		var mousePos = event.position
 		MoveRaycast(mousePos)
 
-func device_gyroscope():
-	var gyro_vector := Input.get_accelerometer()
-	var fixed = FixRotation(gyro_vector.x, gyro_vector.y, gyro_vector.z)
+var yaw:float = 0
+func device_gyroscope(delta):
+	var gyro_vector := Input.get_gravity()
+	var roll = atan2(-gyro_vector.x, -gyro_vector.y)
+	gyro_vector = gyro_vector.rotated(Vector3.FORWARD, -roll)
+	var pitch = atan2(gyro_vector.z, -gyro_vector.y)
+	
+	var giroscopio = Input.get_gyroscope()
+#	var fixed = FixRotation(gyro_vector.x, gyro_vector.y, gyro_vector.z)
+	yaw += giroscopio.y * delta
+	var fixed = Vector3(pitch, yaw, roll)
 	screenDebugMultiple([
-		"x: "+str(rad2deg(gyro_vector.x)),
-		"y: "+str(rad2deg (gyro_vector.y) ),
-		"z: "+str(rad2deg(gyro_vector.z) ),
+		"x: "+str(giroscopio.x),
+		"y: "+str(giroscopio.y),
+		"z: "+str(giroscopio.z),
 		"converted",
 		str(fixed[0]),
 		str(fixed[1]),
 		str(fixed[2])
 	])
-	
-	$Camera.rotation = Vector3(gyro_vector.z, gyro_vector.x, gyro_vector.y)
+	$Camera.rotation = fixed
+#	$Camera.rotation = Vector3(fixed.z, fixed.x, fixed.y)
 
 func _process(delta):
-#	device_gyroscope()
-	if interpolateHotspotRot != null:
-		interpolateHotspotRot.call_func()
+	device_gyroscope(delta)
+#	if interpolateHotspotRot != null:
+#		interpolateHotspotRot.call_func()
 
 func InterpolateHotspotRotation():
 	var valX = $CanvasLayer/EditHotspotDialog/HBoxContainer/rotx/Rotation.value
@@ -177,8 +187,7 @@ func WindowSizeChanged():#função que recebe sinal de quando a tela mudad de ta
 		$CanvasLayer/Description/close.rect_scale = Vector2(2, 2)
 
 func _input(event):#detecta as entradas (teclado, mouse ou qualquer outra coisa)
-	if mobile_touch:
-		screen_input(event)
+	screen_input(event)
 	AgentInputState.call_func(event)
 
 func moveCamera(event, sense:float):#move a camera tanto no toque quanto no mouse
@@ -219,8 +228,13 @@ func SetStateEditing(value:bool):
 		EditingInstance = -1
 		AgentInputState = funcref(self, InputStates[1])
 
-func LockedRaycast(mousepos:Vector2):
+func LockedRaycast(event):
 	pass
+
+func total_lock():
+	$Camera.rotation_degrees = Vector3(0, 0, 0)
+	rotation_degrees = Vector3(0, 180, 0)
+	AgentInputState = funcref(self, InputStates[2])
 
 func MoveRaycast(mousePos:Vector2):#move o raycast de acordo com toque ou mouse
 	if RayCastInUse != null:
@@ -261,23 +275,11 @@ func screenDebugMultiple(args:Array):
 	$CanvasLayer/text/Label.text = text
 	$CanvasLayer/text.visible = true
 
-func TestMobile() -> String:
-	return JavaScript.eval("""
-		// https://dev.to/vaibhavkhulbe/get-os-details-from-the-webpage-in-javascript-b07
-		function getOS() {
-			var userAgent = window.navigator.userAgent,
-			platform = window.navigator.platform,
-			iosPlatforms = ['iPhone', 'iPad', 'iPod'],
-			os = 'unknown';
-			if (iosPlatforms.indexOf(platform) !== -1) {
-				os = 'iOS';
-			} else if (/Android/.test(userAgent)) {
-				os = 'Android';
-			}
-			return os;
-		}
-		getOS();
-	""")
+func TestMobile() -> bool:
+	if OS.has_feature("Android"):
+		return true
+	else:
+		return false
 
 var current_quat = Quat.IDENTITY
 var rotation_rate = Vector3.ZERO
@@ -336,6 +338,13 @@ func _on_change_hotspot_pressed():
 func _on_close_pressed():
 	$CanvasLayer/Description.visible = false
 	mobile_touch = true
+
+func FixRotationNative(DeviceRotation: Vector3) -> Vector3:
+	var yaw = 0
+	var roll = atan2(DeviceRotation.x, -DeviceRotation.y)
+	var pitch = atan2(DeviceRotation.z, -DeviceRotation.y)
+	var newvec = Vector3(pitch, yaw, roll)
+	return newvec
 
 func FixRotation(alpha:float, beta:float, gamma:float)->Array:
 	var cX = cos(deg2rad(beta));
