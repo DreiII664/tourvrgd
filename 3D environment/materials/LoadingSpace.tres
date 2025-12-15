@@ -1,0 +1,13 @@
+[gd_resource type="SpatialMaterial" load_steps=3 format=2]
+
+[sub_resource type="Gradient" id=1]
+
+[sub_resource type="GradientTexture2D" id=2]
+gradient = SubResource( 1 )
+fill_from = Vector2( 0.00999999, 0.57 )
+fill_to = Vector2( 0.00999999, 0.00999999 )
+
+[resource]
+flags_do_not_receive_shadows = true
+albedo_color = Color( 0, 0.721569, 0.266667, 1 )
+albedo_texture = SubResource( 2 )

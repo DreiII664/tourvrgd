@@ -66,8 +66,17 @@ func GenerateScenesData(envs:Directory):
 	copybase.connect("carregamento_completo", self, "alterar_texto")
 	copybase.connect("tudo_carregado", self, "sair")
 	copybase.fetch_from_jsonbd()
+	var loadingMaterial:SpatialMaterial = ResourceLoader.load("res://3D environment/materials/LoadingSpace.tres")
+	$MeshInstance.material_override = loadingMaterial
+	if $AnimationPlayer.is_playing(): $AnimationPlayer.stop()
+	$WorldEnvironment.environment.background_energy = 1
+	$MeshInstance.rotation = Vector3(0, 0, 0)
 	if $Agent.has_method("total_lock"):
 		$Agent.total_lock()
+	if $Agent is ARVROrigin:
+		$Aviso.global_position = $Agent/ARVRCamera.global_position
+	for i in $Hotspots.get_child_count():
+		$Hotspots.get_child(i).queue_free()
 
 #função semelhante ao main do C
 func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
@@ -184,7 +193,7 @@ func LoadEnvironment(
 	var texture:ImageTexture = EnvImage
 	var Mat := SpatialMaterial.new()
 #	Mat.albedo_color = Color(0,0,0)
-	Mat.flags_unshaded = true
+	Mat.flags_unshaded = false
 	Mat.flags_do_not_receive_shadows = true
 	Mat.params_cull_mode = Material3D.CULL_DISABLED
 	Mat.albedo_texture = texture
@@ -259,6 +268,7 @@ func _on_Timer_timeout():
 
 func AlignHotspots():
 	$Hotspots.global_position = $Agent/ARVRCamera.global_position
+	$MeshInstance.global_position = $Agent/ARVRCamera.global_position
 
 func AddAgent():
 	var verify:bool = GlobalL.VerifyXR()
