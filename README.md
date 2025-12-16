@@ -12,4 +12,4 @@ para compilar o código para meta quest, conecte um cabo USB ao Meta Quest e esp
 Se estiver rodando o apk no meta quest, ou dispositivos android, dê permissão para o app acessar arquivos do aparelho para armazenar as imagens do tour.
 
 # Integração com o banco de dados
-Nesta atualização, o tour na versão godot está parcialmente integrado com o banco de dados da versão three.js do tour da unipampa, além das diversas adaptações das cenas para comportar corretamente a posição dos hotspots e rotação das imagens.
+Nesta atualização, o tour na versão godot está adaptado para usar o banco de dados da versão three.js do tour da unipampa, além das diversas mudanças nas cenas para comportar corretamente a posição dos hotspots e rotação das imagens.

@@ -66,10 +66,11 @@ func GenerateScenesData(envs:Directory):
 	copybase.connect("carregamento_completo", self, "alterar_texto")
 	copybase.connect("tudo_carregado", self, "sair")
 	copybase.fetch_from_jsonbd()
-	var loadingMaterial:SpatialMaterial = ResourceLoader.load("res://3D environment/materials/LoadingSpace.tres")
-	$MeshInstance.material_override = loadingMaterial
+	
 	if $AnimationPlayer.is_playing(): $AnimationPlayer.stop()
+	
 	$WorldEnvironment.environment.background_energy = 1
+	$WorldEnvironment.environment.ambient_light_energy = 1
 	$MeshInstance.rotation = Vector3(0, 0, 0)
 	if $Agent.has_method("total_lock"):
 		$Agent.total_lock()
@@ -77,6 +78,9 @@ func GenerateScenesData(envs:Directory):
 		$Aviso.global_position = $Agent/ARVRCamera.global_position
 	for i in $Hotspots.get_child_count():
 		$Hotspots.get_child(i).queue_free()
+	var loadingMaterial:SpatialMaterial = ResourceLoader.load("res://3D environment/materials/LoadingSpace.tres")
+	$MeshInstance.material_override = loadingMaterial
+	print(loadingMaterial)
 
 #função semelhante ao main do C
 func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
@@ -86,7 +90,7 @@ func _ready():#inicia a cena e verifica se irá usar vr, não vr, etc
 	if OS.has_feature("Android"):
 		if OS.get_granted_permissions().size() < 4:
 			OS.request_permissions()
-			yield(get_tree().create_timer(6), "timeout")
+			yield(get_tree().create_timer(3), "timeout")
 	
 	print(OS.get_user_data_dir())
 	var envs := Directory.new()
@@ -101,7 +105,7 @@ func sair():
 var totalbaixado:float = 0
 func alterar_texto(cena_atual:int, cenas:int, mb_loaded:float):
 	totalbaixado+= mb_loaded
-	$Aviso/Label3D.text = "cenas baixadas: "+str(cena_atual)+"/"+str(cenas)+"\n %.2f MB/ ~%.2f MB"%[totalbaixado, tamanho_tour_estimado]
+	$Aviso/Label3D.text = "cenas baixadas: "+str(cena_atual+1)+"/"+str(cenas)+"\n %.2f MB/ ~%.2f MB"%[totalbaixado, tamanho_tour_estimado]
 
 func UpdateScreen() -> void:
 	var window_size = get_viewport().size
